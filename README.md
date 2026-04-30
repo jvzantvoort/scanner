@@ -22,16 +22,30 @@ A pure Rust network port scanner that detects open ports and displays results in
 
 ## Installation
 
-From crates.io:
-```bash
-cargo install portscan-rs
-```
+### From GitHub Releases
 
-Or build from source:
+Download pre-built binaries from the [releases page](https://github.com/jvzantvoort/scanner/releases).
+
+### From Source
 
 ```bash
+git clone https://github.com/jvzantvoort/scanner
+cd scanner
 cargo build --release
 ./target/release/scanner --help
+```
+
+### From Git (using cargo)
+
+```bash
+cargo install --git https://github.com/jvzantvoort/scanner
+```
+
+### Docker
+
+```bash
+docker pull ghcr.io/jvzantvoort/scanner:latest
+docker run --rm ghcr.io/jvzantvoort/scanner:latest --help
 ```
 
 ## Quick Start
