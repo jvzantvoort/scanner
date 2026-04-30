@@ -34,7 +34,9 @@ jobs:
           key: ${{ runner.os }}-target-bench-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run benchmarks
-        run: cargo bench --verbose
+        run: |
+          mkdir -p target/criterion
+          cargo bench --verbose 2>&1 | tee target/criterion/output.txt
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1

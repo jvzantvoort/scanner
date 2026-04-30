@@ -1,0 +1,5 @@
+[advisories]
+# Ignore advisories for crates we don't actually depend on
+# Note: We renamed the package from "scanner" to "portscan-rs" to avoid
+# confusion with the vulnerable "scanner" crate on crates.io
+ignore = []

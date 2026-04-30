@@ -21,7 +21,7 @@ pub fn format_table(results: &[HostScanResult], ports: &[u16]) -> String {
 
     // Build simple table data
     let mut table_data = Vec::new();
-    
+
     for result in results {
         let hostname = result
             .hostname
@@ -35,66 +35,63 @@ pub fn format_table(results: &[HostScanResult], ports: &[u16]) -> String {
                 }
             })
             .unwrap_or_else(|| "-".to_string());
-        
-        let status = if result.is_up { 
+
+        let status = if result.is_up {
             style("up").green().bold().to_string()
-        } else { 
+        } else {
             style("down").dim().to_string()
         };
-        
+
         let mut port_states = Vec::new();
         for &port in ports {
-            let state = result.ports.get(&port).copied().unwrap_or(PortState::Unknown);
+            let state = result
+                .ports
+                .get(&port)
+                .copied()
+                .unwrap_or(PortState::Unknown);
             port_states.push(format_port_status(state));
         }
-        
-        table_data.push((
-            result.ip.to_string(),
-            hostname,
-            status,
-            port_states.clone(),
-        ));
+
+        table_data.push((result.ip.to_string(), hostname, status, port_states.clone()));
     }
-    
+
     // Build header and rows manually for better control
     let mut output = String::new();
-    
+
     // Header
-    output.push_str(&format!("{:<17} {:<32} ", 
-        style("IP Address").bold(), 
+    output.push_str(&format!(
+        "{:<17} {:<32} ",
+        style("IP Address").bold(),
         style("Hostname").bold()
     ));
-    
+
     for &port in ports {
         let info = get_port_info(port);
         let header = format!("{}:{}", info.service, port);
         output.push_str(&format!("{:<12} ", style(header).bold()));
     }
     output.push_str(&format!("{:<8}\n", style("Status").bold()));
-    
+
     // Separator
-    output.push_str(&format!("{} {} ", 
-        "─".repeat(17),
-        "─".repeat(32)
-    ));
+    output.push_str(&format!("{} {} ", "─".repeat(17), "─".repeat(32)));
     for _ in ports {
         output.push_str(&format!("{} ", "─".repeat(12)));
     }
     output.push_str(&format!("{}\n", "─".repeat(8)));
-    
+
     // Data rows
     for (ip, hostname, status, port_states) in table_data {
         output.push_str(&format!("{:<17} {:<32} ", ip, hostname));
-        
+
         for port_state in port_states {
             // Account for ANSI codes by using fixed width after formatting
             let display_len = console::measure_text_width(&port_state);
-            let padding = if display_len < 12 { 12 - display_len } else { 0 };
+            let padding = 12_usize.saturating_sub(display_len);
             output.push_str(&format!("{}{} ", port_state, " ".repeat(padding)));
         }
-        
+
         let status_len = console::measure_text_width(&status);
-        let status_padding = if status_len < 8 { 8 - status_len } else { 0 };
+        let status_padding = 8_usize.saturating_sub(status_len);
         output.push_str(&format!("{}{}\n", status, " ".repeat(status_padding)));
     }
 
@@ -102,11 +99,7 @@ pub fn format_table(results: &[HostScanResult], ports: &[u16]) -> String {
 }
 
 /// Generate scan summary
-pub fn format_summary(
-    results: &[HostScanResult],
-    target: &str,
-    duration_secs: f64,
-) -> String {
+pub fn format_summary(results: &[HostScanResult], target: &str, duration_secs: f64) -> String {
     let total_hosts = results.len();
     let up_hosts = results.iter().filter(|r| r.is_up).count();
     let total_open_ports: usize = results.iter().map(|r| r.open_port_count()).sum();
@@ -122,11 +115,11 @@ pub fn format_summary(
     };
 
     let mut output = String::new();
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(&style("Scan Summary").bold().to_string());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(&"═".repeat(60));
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(&format!("Target Network:    {}\n", target));
     output.push_str(&format!("Hosts Scanned:     {}\n", total_hosts));
     output.push_str(&format!(
@@ -156,9 +149,9 @@ pub fn format_summary(
     }
 
     if !security_notes.is_empty() {
-        output.push_str("\n");
+        output.push('\n');
         output.push_str(&style("Security Notes:").yellow().bold().to_string());
-        output.push_str("\n");
+        output.push('\n');
         for note in security_notes.iter().take(5) {
             output.push_str(&format!("  • {}\n", note));
         }

@@ -12,7 +12,7 @@ pub fn parse_ports(input: &str) -> Result<Vec<u16>> {
 
     for part in input.split(',') {
         let part = part.trim();
-        
+
         if part.contains('-') {
             // Handle range
             let range_parts: Vec<&str> = part.split('-').collect();
@@ -49,9 +49,9 @@ pub fn parse_ports(input: &str) -> Result<Vec<u16>> {
             }
         } else {
             // Handle single port
-            let port: u16 = part.parse().map_err(|_| {
-                ScannerError::InvalidPort(format!("Invalid port number: {}", part))
-            })?;
+            let port: u16 = part
+                .parse()
+                .map_err(|_| ScannerError::InvalidPort(format!("Invalid port number: {}", part)))?;
 
             if port == 0 {
                 return Err(ScannerError::InvalidPort(

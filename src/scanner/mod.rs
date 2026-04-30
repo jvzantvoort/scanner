@@ -1,16 +1,16 @@
 pub mod host;
+pub mod icmp;
 pub mod port;
 pub mod tcp;
-pub mod icmp;
 
 use crate::error::Result;
+use dns_lookup::lookup_addr;
 use host::HostScanResult;
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
-use dns_lookup::lookup_addr;
 
 pub struct ScanConfig {
     pub timeout_ms: u64,
@@ -35,7 +35,7 @@ pub async fn scan_network(
     // First, ping all hosts to see which ones are up
     let mut alive_hosts = Vec::new();
     let mut ping_tasks = JoinSet::new();
-    
+
     for ip in targets.iter().copied() {
         let timeout_ms = config.timeout_ms;
         ping_tasks.spawn(async move {
@@ -43,7 +43,7 @@ pub async fn scan_network(
             (ip, is_alive)
         });
     }
-    
+
     // Collect alive hosts
     while let Some(task_result) = ping_tasks.join_next().await {
         if let Ok((ip, is_alive)) = task_result {
@@ -52,12 +52,12 @@ pub async fn scan_network(
             }
         }
     }
-    
+
     // If no hosts responded to ping, return empty results
     if alive_hosts.is_empty() {
         return Ok(Vec::new());
     }
-    
+
     let semaphore = Arc::new(Semaphore::new(config.concurrency));
     let mut tasks = JoinSet::new();
 
@@ -92,12 +92,11 @@ pub async fn scan_network(
     let mut hostname_tasks = JoinSet::new();
     for ip in alive_hosts.iter().copied() {
         hostname_tasks.spawn(async move {
-            let hostname = lookup_addr(&IpAddr::V4(ip))
-                .ok();
+            let hostname = lookup_addr(&IpAddr::V4(ip)).ok();
             (ip, hostname)
         });
     }
-    
+
     while let Some(task_result) = hostname_tasks.join_next().await {
         if let Ok((ip, Some(hostname))) = task_result {
             if let Some(result) = results.get_mut(&ip) {

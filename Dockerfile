@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.70-alpine AS builder
+FROM rust:alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache musl-dev
@@ -12,7 +12,6 @@ COPY Cargo.toml Cargo.lock ./
 # Copy source code
 COPY src ./src
 COPY benches ./benches
-COPY tests ./tests
 
 # Build for release
 RUN cargo build --release
