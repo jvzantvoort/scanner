@@ -24,7 +24,7 @@ surge-ping = "0.8"
 dns-lookup = "2.0"
 
 # Table & Output
-tabled = "0.15"
+tabled = "0.20"
 indicatif = "0.17"
 
 # Serialization
