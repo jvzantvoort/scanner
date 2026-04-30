@@ -1,5 +1,7 @@
 use clap::Parser;
-use portscan_rs::{output, parser, scanner::ScanConfig, scanner::scan_network, Result, ScannerError};
+use portscan_rs::{
+    output, parser, scanner::scan_network, scanner::ScanConfig, Result, ScannerError,
+};
 use std::path::PathBuf;
 use std::time::Instant;
 
