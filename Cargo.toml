@@ -19,7 +19,7 @@ clap = { version = "4.4", features = ["derive", "cargo"] }
 console = "0.15"
 
 # Network
-ipnetwork = "0.20"
+ipnetwork = "0.21"
 surge-ping = "0.8"
 dns-lookup = "2.0"
 
