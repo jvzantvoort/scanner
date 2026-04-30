@@ -12,13 +12,13 @@ pub fn parse_cidr(input: &str) -> Result<Vec<Ipv4Addr>> {
                 "Scanning localhost (127.0.0.0/8) is not allowed".to_string(),
             ));
         }
-        
+
         if ip.octets()[0] == 169 && ip.octets()[1] == 254 {
             return Err(ScannerError::InvalidTarget(
                 "Scanning link-local (169.254.0.0/16) is not allowed".to_string(),
             ));
         }
-        
+
         return Ok(vec![ip]);
     }
 
@@ -29,14 +29,14 @@ pub fn parse_cidr(input: &str) -> Result<Vec<Ipv4Addr>> {
 
     // Validate against reserved ranges
     let first_ip = network.network();
-    
+
     // Block localhost
     if first_ip.octets()[0] == 127 {
         return Err(ScannerError::InvalidTarget(
             "Scanning localhost (127.0.0.0/8) is not allowed".to_string(),
         ));
     }
-    
+
     // Block link-local
     if first_ip.octets()[0] == 169 && first_ip.octets()[1] == 254 {
         return Err(ScannerError::InvalidTarget(

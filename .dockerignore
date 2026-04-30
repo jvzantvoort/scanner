@@ -19,18 +19,14 @@ target/
 .DS_Store
 Thumbs.db
 
-# Documentation
+# Documentation (except README)
 *.md
 !README.md
 
-# Test files
-tests/
-
-# Benchmark files
-benches/
-
 # Demo files
 demo_scan.sh
+disclaimer.png
 
-# Config files (adjust as needed)
+# Not needed for Docker build
+tests/
 config/
