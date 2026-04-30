@@ -1,0 +1,581 @@
+# Network Scanner - Task Breakdown
+
+## Phase 1: Core Infrastructure & CLI (Week 1)
+
+### Task 1.1: Project Setup
+- [ ] Initialize new Rust project with `cargo init --bin scanner`
+- [ ] Create directory structure (src/scanner, src/parser, src/output, src/config)
+- [ ] Set up .gitignore for Rust projects
+- [ ] Create Cargo.toml with initial dependencies
+- [ ] Add LICENSE file (MIT or Apache-2.0)
+- [ ] Create basic README.md with project description
+
+**Estimated Time**: 2 hours  
+**Priority**: Critical  
+**Dependencies**: None
+
+### Task 1.2: Error Handling Infrastructure
+- [ ] Create `src/error.rs` with custom error types using `thiserror`
+- [ ] Define `ScannerError` enum for common errors
+  - [ ] InvalidTarget
+  - [ ] InvalidPort
+  - [ ] NetworkError
+  - [ ] PermissionDenied
+  - [ ] ParseError
+- [ ] Implement Display and Error traits
+- [ ] Add `anyhow::Result` type alias for convenience
+
+**Estimated Time**: 3 hours  
+**Priority**: Critical  
+**Dependencies**: Task 1.1
+
+### Task 1.3: CLI Framework with Clap
+- [ ] Create `src/main.rs` with Clap derive macros
+- [ ] Define `Args` struct with fields:
+  - [ ] `target: String` - IP address or CIDR range
+  - [ ] `ports: String` - Comma-separated ports or ranges
+  - [ ] `timeout: Option<u64>` - Connection timeout in ms (default: 1000)
+  - [ ] `concurrency: Option<usize>` - Max parallel connections (default: 100)
+  - [ ] `format: Option<String>` - Output format (default: table)
+  - [ ] `output: Option<PathBuf>` - Output file path
+- [ ] Add help text and version information
+- [ ] Add examples to CLI help
+
+**Estimated Time**: 4 hours  
+**Priority**: Critical  
+**Dependencies**: Task 1.2
+
+### Task 1.4: CIDR Parser
+- [ ] Create `src/parser/cidr.rs`
+- [ ] Implement function to parse single IP addresses
+- [ ] Implement function to parse CIDR notation using `ipnetwork` crate
+- [ ] Handle IPv4 addresses (IPv6 optional for future)
+- [ ] Return Vec<Ipv4Addr> of all IPs in range
+- [ ] Add validation for reserved ranges (127.0.0.0/8, etc.)
+- [ ] Write unit tests for valid and invalid inputs
+
+**Estimated Time**: 4 hours  
+**Priority**: High  
+**Dependencies**: Task 1.2
+
+### Task 1.5: Port Range Parser
+- [ ] Create `src/parser/ports.rs`
+- [ ] Parse single ports (e.g., "80")
+- [ ] Parse comma-separated ports (e.g., "22,80,443")
+- [ ] Parse port ranges (e.g., "1-1024")
+- [ ] Parse mixed format (e.g., "22,80-443,8080")
+- [ ] Validate port numbers (1-65535)
+- [ ] Return Vec<u16> with unique, sorted ports
+- [ ] Write unit tests for all formats
+
+**Estimated Time**: 4 hours  
+**Priority**: High  
+**Dependencies**: Task 1.2
+
+### Task 1.6: Input Validation Module
+- [ ] Create `src/config/validation.rs`
+- [ ] Implement validation functions for CLI args
+- [ ] Integrate CIDR and port parsers
+- [ ] Provide helpful error messages with suggestions
+- [ ] Add validation for timeout ranges
+- [ ] Add validation for concurrency limits
+
+**Estimated Time**: 3 hours  
+**Priority**: High  
+**Dependencies**: Tasks 1.4, 1.5
+
+**Phase 1 Deliverable**: CLI that accepts and validates user input
+
+---
+
+## Phase 2: Network Scanner Core (Week 2)
+
+### Task 2.1: Port State Management
+- [ ] Create `src/scanner/port.rs`
+- [ ] Define `PortState` enum: Open, Closed, Filtered, Unknown
+- [ ] Implement Display trait for PortState
+- [ ] Create `PortScanResult` struct with port number and state
+- [ ] Add timestamp field for scan time
+
+**Estimated Time**: 2 hours  
+**Priority**: Critical  
+**Dependencies**: Task 1.2
+
+### Task 2.2: TCP Connect Scanner
+- [ ] Create `src/scanner/tcp.rs`
+- [ ] Implement `scan_port` async function using `tokio::net::TcpStream`
+- [ ] Add timeout wrapper using `tokio::time::timeout`
+- [ ] Detect PortState based on connection result:
+  - [ ] Success → Open
+  - [ ] ConnectionRefused → Closed
+  - [ ] Timeout/Other → Filtered
+- [ ] Handle edge cases (host unreachable, network down)
+- [ ] Write unit tests for localhost scanning
+
+**Estimated Time**: 6 hours  
+**Priority**: Critical  
+**Dependencies**: Task 2.1
+
+### Task 2.3: Host Result Aggregation
+- [ ] Create `src/scanner/host.rs`
+- [ ] Define `HostScanResult` struct:
+  - [ ] IP address
+  - [ ] Hostname (optional)
+  - [ ] Host status (up/down)
+  - [ ] Map of port → PortState
+  - [ ] Scan timestamp
+- [ ] Implement methods to add port results
+- [ ] Implement sorting by IP address
+
+**Estimated Time**: 3 hours  
+**Priority**: High  
+**Dependencies**: Task 2.1
+
+### Task 2.4: DNS Reverse Lookup
+- [ ] Add async reverse DNS lookup using `hickory-dns`
+- [ ] Implement timeout for DNS queries (2 seconds)
+- [ ] Fallback to IP address if lookup fails
+- [ ] Cache DNS results to avoid duplicate lookups
+- [ ] Add configuration flag to disable DNS lookups
+
+**Estimated Time**: 4 hours  
+**Priority**: Medium  
+**Dependencies**: Task 2.3
+
+### Task 2.5: Concurrent Scanning Engine
+- [ ] Create `src/scanner/mod.rs` with main scan orchestration
+- [ ] Implement semaphore-based rate limiting using `tokio::sync::Semaphore`
+- [ ] Use `tokio::task::JoinSet` for managing concurrent tasks
+- [ ] Spawn tasks for each (IP, port) combination
+- [ ] Collect results into Vec<HostScanResult>
+- [ ] Handle task panics gracefully
+
+**Estimated Time**: 6 hours  
+**Priority**: Critical  
+**Dependencies**: Tasks 2.2, 2.3
+
+### Task 2.6: Graceful Shutdown
+- [ ] Implement Ctrl+C signal handling using `tokio::signal`
+- [ ] Cancel pending scan tasks on interrupt
+- [ ] Display partial results collected so far
+- [ ] Clean up resources properly
+
+**Estimated Time**: 3 hours  
+**Priority**: Medium  
+**Dependencies**: Task 2.5
+
+### Task 2.7: Result Aggregation
+- [ ] Create `src/parser/results.rs`
+- [ ] Aggregate (IP, port, state) tuples into HostScanResult
+- [ ] Group by IP address
+- [ ] Sort results by IP for consistent output
+- [ ] Calculate scan statistics (total hosts, up hosts, open ports)
+
+**Estimated Time**: 3 hours  
+**Priority**: High  
+**Dependencies**: Task 2.3
+
+**Phase 2 Deliverable**: Working scanner that detects open ports
+
+---
+
+## Phase 3: Output & Formatting (Week 3)
+
+### Task 3.1: Port Information Database
+- [ ] Create `src/output/helpers.rs`
+- [ ] Define `PortInfo` struct with service, description, risk fields
+- [ ] Create const array or HashMap with common ports:
+  - [ ] 21 (FTP), 22 (SSH), 23 (Telnet), 25 (SMTP)
+  - [ ] 53 (DNS), 80 (HTTP), 443 (HTTPS), 3306 (MySQL)
+  - [ ] 5432 (PostgreSQL), 6379 (Redis), 8080 (HTTP-Alt)
+  - [ ] 27017 (MongoDB), and others
+- [ ] Implement `get_port_info(port: u16) -> PortInfo` function
+- [ ] Add security warnings for dangerous ports (Telnet, etc.)
+
+**Estimated Time**: 4 hours  
+**Priority**: High  
+**Dependencies**: None
+
+### Task 3.2: Table Formatter Core
+- [ ] Create `src/output/table.rs`
+- [ ] Define `ScanRow` struct with `Tabled` derive
+- [ ] Implement conversion from HostScanResult to ScanRow
+- [ ] Use `tabled` crate for table generation
+- [ ] Configure table style (borders, alignment)
+- [ ] Handle terminal width dynamically
+
+**Estimated Time**: 4 hours  
+**Priority**: Critical  
+**Dependencies**: Task 3.1
+
+### Task 3.3: Color Highlighting
+- [ ] Add color support using `console` crate
+- [ ] Implement `format_port_status` function:
+  - [ ] Green bold for "open"
+  - [ ] Red for "closed"
+  - [ ] Yellow for "filtered"
+  - [ ] Gray/dim for unknown/down
+- [ ] Apply colors to port columns
+- [ ] Detect terminal color support and disable if needed
+
+**Estimated Time**: 3 hours  
+**Priority**: Critical  
+**Dependencies**: Task 3.2
+
+### Task 3.4: Dynamic Column Headers
+- [ ] Generate column headers based on scanned ports
+- [ ] Format: "Service (Port)" - e.g., "SSH (22)", "HTTP (80)"
+- [ ] Handle variable number of ports
+- [ ] Adjust table layout for different port counts
+
+**Estimated Time**: 3 hours  
+**Priority**: Medium  
+**Dependencies**: Task 3.2
+
+### Task 3.5: Scan Statistics Summary
+- [ ] Create summary section displayed after table
+- [ ] Show:
+  - [ ] Target network/IP
+  - [ ] Total hosts scanned
+  - [ ] Hosts up (with percentage)
+  - [ ] Total open ports
+  - [ ] Scan duration
+  - [ ] Scan rate (hosts/sec)
+- [ ] Add security notes section highlighting issues
+
+**Estimated Time**: 3 hours  
+**Priority**: Medium  
+**Dependencies**: Task 2.7
+
+### Task 3.6: Helpful Security Notes
+- [ ] Analyze scan results for security issues
+- [ ] Flag dangerous open ports (Telnet, unencrypted protocols)
+- [ ] Suggest HTTPS migration for HTTP-only hosts
+- [ ] Note default port usage (security through obscurity)
+- [ ] Display "Next Steps" suggestions
+
+**Estimated Time**: 3 hours  
+**Priority**: Low  
+**Dependencies**: Tasks 3.1, 3.5
+
+**Phase 3 Deliverable**: Beautiful table with green highlighting and helpful info
+
+---
+
+## Phase 4: Export & Progress (Week 3-4)
+
+### Task 4.1: JSON Export
+- [ ] Create `src/output/json.rs`
+- [ ] Define serializable structures with `serde`
+- [ ] Implement JSON formatter using `serde_json`
+- [ ] Include metadata (scan time, target, parameters)
+- [ ] Support pretty-print and compact formats
+- [ ] Write to file or stdout based on `--output` flag
+
+**Estimated Time**: 3 hours  
+**Priority**: High  
+**Dependencies**: Task 2.3
+
+### Task 4.2: CSV Export
+- [ ] Create `src/output/csv.rs`
+- [ ] Define CSV schema (IP, Hostname, Port, State, Service)
+- [ ] Implement CSV writer using `csv` crate
+- [ ] Handle variable port columns (flatten or normalize)
+- [ ] Include header row
+- [ ] Support file output and stdout
+
+**Estimated Time**: 3 hours  
+**Priority**: Medium  
+**Dependencies**: Task 2.3
+
+### Task 4.3: Output Format Dispatcher
+- [ ] Update `src/output/mod.rs`
+- [ ] Implement format selection based on `--format` flag
+- [ ] Dispatch to table/json/csv formatters
+- [ ] Handle file writing vs stdout output
+- [ ] Validate output path writability
+
+**Estimated Time**: 2 hours  
+**Priority**: High  
+**Dependencies**: Tasks 4.1, 4.2
+
+### Task 4.4: Progress Bar Implementation
+- [ ] Add `indicatif` crate integration
+- [ ] Create progress bar for total hosts
+- [ ] Show current IP being scanned
+- [ ] Display progress percentage
+- [ ] Calculate and show ETA
+- [ ] Update progress in real-time during scan
+
+**Estimated Time**: 4 hours  
+**Priority**: High  
+**Dependencies**: Task 2.5
+
+### Task 4.5: Spinner for DNS Lookups
+- [ ] Add spinner for DNS resolution phase
+- [ ] Show "Resolving hostnames..." message
+- [ ] Display count of resolved vs total
+- [ ] Hide progress when output format is JSON/CSV
+
+**Estimated Time**: 2 hours  
+**Priority**: Low  
+**Dependencies**: Tasks 2.4, 4.4
+
+### Task 4.6: Enhanced Error Messages
+- [ ] Improve all error messages with context
+- [ ] Add "Did you mean...?" suggestions for typos
+- [ ] Provide remediation steps for common errors
+- [ ] Format errors consistently with colors
+- [ ] Add troubleshooting URLs/docs references
+
+**Estimated Time**: 3 hours  
+**Priority**: Medium  
+**Dependencies**: Task 1.2
+
+**Phase 4 Deliverable**: Complete MVP with export and progress feedback
+
+---
+
+## Phase 5: Configuration & Optimization (Week 4)
+
+### Task 5.1: Configuration File Structure
+- [ ] Create `src/config/mod.rs`
+- [ ] Define `Config` struct with default values
+- [ ] Add TOML deserialization support
+- [ ] Define config file location: `~/.config/scanner/config.toml`
+- [ ] Implement config loading with fallback to defaults
+- [ ] Command-line args override config values
+
+**Estimated Time**: 4 hours  
+**Priority**: Medium  
+**Dependencies**: Task 1.3
+
+### Task 5.2: Scan Profiles
+- [ ] Define profile structure in config
+- [ ] Create default profiles:
+  - [ ] "web" - ports 80, 443, 8080, 8443
+  - [ ] "ssh" - port 22
+  - [ ] "database" - ports 3306, 5432, 27017, 6379
+  - [ ] "common" - top 100 common ports
+- [ ] Add `--profile` CLI flag
+- [ ] Allow custom profiles in config file
+
+**Estimated Time**: 3 hours  
+**Priority**: Low  
+**Dependencies**: Task 5.1
+
+### Task 5.3: Performance Benchmarking
+- [ ] Create `benches/scan_benchmark.rs`
+- [ ] Use `criterion` crate for benchmarks
+- [ ] Benchmark scenarios:
+  - [ ] Single host, 3 ports
+  - [ ] /24 network (254 hosts), 3 ports
+  - [ ] /24 network, 100 ports
+- [ ] Track memory usage
+- [ ] Document baseline performance
+
+**Estimated Time**: 4 hours  
+**Priority**: Medium  
+**Dependencies**: Task 2.5
+
+### Task 5.4: Optimization - Task Spawning
+- [ ] Profile task creation overhead
+- [ ] Optimize JoinSet usage
+- [ ] Batch task creation if beneficial
+- [ ] Tune semaphore concurrency defaults
+- [ ] Test with various concurrency levels
+
+**Estimated Time**: 4 hours  
+**Priority**: Low  
+**Dependencies**: Task 5.3
+
+### Task 5.5: Optimization - Memory Usage
+- [ ] Profile memory allocation during scans
+- [ ] Optimize result storage (use iterators where possible)
+- [ ] Stream results instead of collecting all in memory
+- [ ] Use Arc/Rc efficiently for shared data
+- [ ] Test with 10,000+ host scans
+
+**Estimated Time**: 4 hours  
+**Priority**: Low  
+**Dependencies**: Task 5.3
+
+### Task 5.6: Result Caching (Optional)
+- [ ] Implement cache for recent scan results
+- [ ] Store in `~/.cache/scanner/results.db`
+- [ ] Use SQLite or simple JSON storage
+- [ ] Add `--use-cache` flag
+- [ ] Implement cache expiration (24 hours default)
+
+**Estimated Time**: 6 hours  
+**Priority**: Low  
+**Dependencies**: Task 5.1
+
+### Task 5.7: Scan Comparison (Optional)
+- [ ] Implement diff between two scan results
+- [ ] Highlight new open ports (green)
+- [ ] Highlight newly closed ports (red)
+- [ ] Add `--compare <file>` flag
+- [ ] Support comparing JSON exports
+
+**Estimated Time**: 5 hours  
+**Priority**: Low  
+**Dependencies**: Task 4.1
+
+**Phase 5 Deliverable**: Production-ready scanner with configuration
+
+---
+
+## Testing & Quality Assurance
+
+### Task T.1: Unit Test Coverage
+- [ ] Write tests for CIDR parser (>90% coverage)
+- [ ] Write tests for port parser (>90% coverage)
+- [ ] Write tests for port state detection
+- [ ] Write tests for result aggregation
+- [ ] Write tests for formatters (table, JSON, CSV)
+- [ ] Achieve >80% overall code coverage
+
+**Estimated Time**: 8 hours  
+**Priority**: High  
+**Dependencies**: All implementation tasks
+
+### Task T.2: Integration Tests
+- [ ] Create `tests/integration_tests.rs`
+- [ ] Test scanning localhost with known open/closed ports
+- [ ] Test CIDR range scanning (use local network or mock)
+- [ ] Test all output formats
+- [ ] Test error scenarios (invalid input, network errors)
+- [ ] Test Ctrl+C handling
+
+**Estimated Time**: 6 hours  
+**Priority**: High  
+**Dependencies**: Phase 4 complete
+
+### Task T.3: Security Audit
+- [ ] Review input sanitization for command injection
+- [ ] Verify privilege handling is correct
+- [ ] Test against scanning reserved ranges
+- [ ] Review rate limiting effectiveness
+- [ ] Check for memory leaks in long-running scans
+
+**Estimated Time**: 4 hours  
+**Priority**: High  
+**Dependencies**: Phase 4 complete
+
+---
+
+## Documentation
+
+### Task D.1: README.md
+- [ ] Add project description and features
+- [ ] Installation instructions (cargo install, binary download)
+- [ ] Quick start guide with examples
+- [ ] CLI reference for all flags
+- [ ] Configuration file examples
+- [ ] Add screenshots/example output
+- [ ] Add comparison with nmap
+
+**Estimated Time**: 4 hours  
+**Priority**: High  
+**Dependencies**: Phase 4 complete
+
+### Task D.2: Rustdoc Documentation
+- [ ] Document all public functions and types
+- [ ] Add module-level documentation
+- [ ] Include code examples in docs
+- [ ] Document error types and recovery
+- [ ] Generate and review docs with `cargo doc`
+
+**Estimated Time**: 4 hours  
+**Priority**: Medium  
+**Dependencies**: Phase 4 complete
+
+### Task D.3: User Guide
+- [ ] Create USAGE.md with detailed guide
+- [ ] Document scan profiles and best practices
+- [ ] Add troubleshooting section
+- [ ] Include performance tuning tips
+- [ ] Add legal/ethical scanning guidelines
+
+**Estimated Time**: 3 hours  
+**Priority**: Low  
+**Dependencies**: Phase 5 complete
+
+### Task D.4: CHANGELOG.md
+- [ ] Create changelog with initial release notes
+- [ ] Document features implemented
+- [ ] Note known limitations
+- [ ] Outline future roadmap
+
+**Estimated Time**: 1 hour  
+**Priority**: Low  
+**Dependencies**: Phase 5 complete
+
+---
+
+## Release Preparation
+
+### Task R.1: CI/CD Setup
+- [ ] Create GitHub Actions workflow
+- [ ] Run tests on push/PR
+- [ ] Run clippy linter
+- [ ] Run rustfmt check
+- [ ] Build for multiple targets (Linux, macOS, Windows)
+- [ ] Generate release binaries
+
+**Estimated Time**: 4 hours  
+**Priority**: Medium  
+**Dependencies**: Task T.1
+
+### Task R.2: Cargo Package Configuration
+- [ ] Update Cargo.toml metadata (description, keywords, categories)
+- [ ] Add repository and homepage URLs
+- [ ] Verify license and authors
+- [ ] Test `cargo publish --dry-run`
+
+**Estimated Time**: 2 hours  
+**Priority**: Medium  
+**Dependencies**: Task D.1
+
+### Task R.3: Binary Optimization
+- [ ] Enable LTO (Link-Time Optimization)
+- [ ] Strip debug symbols for release builds
+- [ ] Optimize for size vs speed (test both)
+- [ ] Verify binary size <5MB target
+
+**Estimated Time**: 2 hours  
+**Priority**: Low  
+**Dependencies**: Phase 5 complete
+
+### Task R.4: Pre-release Testing
+- [ ] Test on clean Linux system
+- [ ] Test on macOS
+- [ ] Test on Windows (if supported)
+- [ ] Verify all features work
+- [ ] Test installation via `cargo install`
+
+**Estimated Time**: 3 hours  
+**Priority**: High  
+**Dependencies**: All tasks complete
+
+---
+
+## Summary
+
+**Total Estimated Time**: ~140-150 hours (4-5 weeks full-time)
+
+**Critical Path**:
+1. Phase 1 (Setup & CLI) → Phase 2 (Scanner) → Phase 3 (Output) → Phase 4 (MVP)
+2. Testing throughout
+3. Documentation & release
+
+**Priority Order**:
+1. Core scanner functionality (Phases 1-4)
+2. Testing and quality assurance
+3. Documentation
+4. Optimization and advanced features (Phase 5)
+5. Release preparation
+
+**MVP Milestone**: End of Phase 4 (Week 3-4)
+**Production Release**: End of Phase 5 + Testing + Docs (Week 5)

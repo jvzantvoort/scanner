@@ -1,0 +1,247 @@
+# Network Scanner Application Specification
+
+## Overview
+
+A command-line/web application that performs network scanning using nmap to identify open ports on network hosts and displays results in a neatly formatted table.
+
+## Core Functionality
+
+### Primary Use Case
+Execute network scans equivalent to `nmap -p 22,80,443 192.168.1.0/24 -oG -` and present results in a structured, readable table format.
+
+### Key Features
+
+1. **Network Scanning**
+   - Scan configurable IP ranges (CIDR notation support)
+   - Scan configurable port lists (individual ports and ranges)
+   - Execute nmap with greppable output format (-oG)
+   - Parse nmap output into structured data
+
+2. **Result Display**
+   - Tabular presentation of scan results
+   - Columns: IP Address, Hostname, Port Status (22, 80, 443), State
+   - Sortable by IP, hostname, or port status
+   - Color-coded status indicators (open/closed/filtered)
+   - Export to CSV/JSON formats
+
+3. **Configuration**
+   - Customizable port lists
+   - Configurable scan targets (single IP, range, CIDR)
+   - Scan timeout settings
+   - Concurrent scan limits
+
+4. **User Interface**
+   - CLI mode: Interactive prompts or argument-based
+   - Optional web UI: Form input with real-time results
+   - Progress indicators during scan execution
+   - Error handling with actionable messages
+
+## Technical Requirements
+
+### Dependencies
+- **nmap**: Must be installed on host system
+- **Execution privileges**: May require sudo/root for certain scan types
+- **Network access**: Appropriate firewall rules must permit scanning
+
+### Input Validation
+- Validate IP addresses and CIDR notation
+- Validate port numbers (1-65535)
+- Check nmap availability before execution
+- Verify user permissions
+
+### Output Format
+```
+┌─────────────────┬──────────────────┬──────┬──────┬──────┬──────────┐
+│ IP Address      │ Hostname         │  22  │  80  │ 443  │ Status   │
+├─────────────────┼──────────────────┼──────┼──────┼──────┼──────────┤
+│ 192.168.1.1     │ router.local     │ open │ open │ open │ up       │
+│ 192.168.1.10    │ server01         │ open │ closed│ open │ up       │
+│ 192.168.1.15    │ workstation      │ closed│ open │ open │ up       │
+│ 192.168.1.20    │ -                │  -   │  -   │  -   │ down     │
+└─────────────────┴──────────────────┴──────┴──────┴──────┴──────────┘
+```
+
+### Performance Considerations
+- Asynchronous execution for large network scans
+- Rate limiting to avoid network flooding
+- Timeout handling for unresponsive hosts
+- Memory-efficient parsing for large result sets
+
+## Architecture
+
+### Components
+
+1. **Scanner Module**
+   - Construct nmap commands
+   - Execute subprocess with appropriate privileges
+   - Capture and buffer output
+   - Handle process errors and timeouts
+
+2. **Parser Module**
+   - Parse greppable nmap output (-oG)
+   - Extract host, port, and state information
+   - Build structured data models
+   - Handle malformed output gracefully
+
+3. **Presentation Module**
+   - Format data into table structures
+   - Apply styling (colors, borders, alignment)
+   - Handle terminal width constraints
+   - Support multiple output formats (table, CSV, JSON)
+
+4. **Configuration Module**
+   - Load user preferences
+   - Validate input parameters
+   - Manage scan profiles
+   - Store scan history
+
+### Data Flow
+```
+User Input → Validator → Scanner → nmap Process → Parser → Formatter → Display
+                ↓                                     ↓
+           Config Store                         Export (CSV/JSON)
+```
+
+## Security Considerations
+
+### Execution Safety
+- Sanitize all user inputs to prevent command injection
+- Run with minimal required privileges
+- Validate target networks against allowed ranges
+- Rate limit scan requests
+
+### Data Privacy
+- Do not log sensitive network information by default
+- Secure storage for scan history
+- Clear consent for network scanning activity
+- Comply with network usage policies
+
+### Operational Security
+- Warn users about network scanning legality
+- Require explicit confirmation for large scans
+- Log all scan activities for audit
+- Implement scan quotas per time period
+
+## User Experience
+
+### CLI Interface
+```bash
+# Interactive mode
+scanner
+
+# Direct execution
+scanner --target 192.168.1.0/24 --ports 22,80,443
+
+# With output format
+scanner --target 192.168.1.0/24 --ports 22-443 --format json --output results.json
+
+# Using scan profile
+scanner --profile webservers
+```
+
+### Web Interface (Optional)
+- Form with target and port inputs
+- Start/Stop scan controls
+- Real-time progress updates
+- Downloadable results
+- Scan history viewer
+
+### Error Messages
+- Clear indication when nmap is not installed
+- Permission errors with suggested remediation
+- Invalid input with correction guidance
+- Network errors with retry options
+
+## Testing Requirements
+
+### Unit Tests
+- Input validation logic
+- Output parsing accuracy
+- Command construction
+- Data formatting
+
+### Integration Tests
+- End-to-end scan execution (safe test network)
+- Output format verification
+- Error handling scenarios
+- Permission handling
+
+### Performance Tests
+- Large network scan (1000+ hosts)
+- Memory usage profiling
+- Concurrent scan handling
+- Timeout behavior
+
+## Compliance
+
+### Adherence to Constitution Principles
+
+**Code Quality**
+- Modular architecture (scanner/parser/presenter separation)
+- 80%+ test coverage for business logic
+- Comprehensive error handling
+- Clear documentation for all public interfaces
+
+**User Experience**
+- Consistent table formatting across terminals
+- <100ms UI response for user actions
+- Progress indicators for long-running scans
+- Graceful handling of interruptions
+
+**Performance**
+- Efficient parsing of large result sets
+- Non-blocking UI during scans
+- Resource cleanup on completion/cancellation
+- Configurable concurrency limits
+
+## Acceptance Criteria
+
+### MVP (Minimum Viable Product)
+- ✓ Execute basic nmap scan with configurable targets and ports
+- ✓ Parse greppable output into structured data
+- ✓ Display results in formatted ASCII table
+- ✓ Handle common errors gracefully
+- ✓ Validate user inputs
+
+### Nice to Have
+- Web interface with real-time updates
+- Scan profile management
+- Multiple output format support (CSV, JSON, HTML)
+- Scan result comparison/diff
+- Scheduled/recurring scans
+- Email notifications on completion
+
+## Implementation Notes
+
+### Recommended Tech Stack
+- **Python**: Rich ecosystem for CLI tools, subprocess management, parsing
+  - Libraries: `python-nmap`, `rich` (tables), `click` (CLI), `pydantic` (validation)
+- **Go**: Excellent performance, single binary distribution
+  - Libraries: `tablewriter`, `cobra` (CLI), native subprocess
+- **Node.js**: Good for web interface integration
+  - Libraries: `node-nmap`, `cli-table3`, `commander` (CLI)
+
+### Development Phases
+1. **Phase 1**: Core scanner and parser (CLI only)
+2. **Phase 2**: Enhanced formatting and export options
+3. **Phase 3**: Configuration and profile management
+4. **Phase 4**: Web interface (optional)
+5. **Phase 5**: Advanced features (scheduling, notifications)
+
+## Risks and Mitigations
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Nmap not installed | High | Pre-flight check, clear error message |
+| Insufficient permissions | High | Permission detection, sudo guidance |
+| Network policy violations | Critical | Legal disclaimer, explicit consent |
+| Large scan performance | Medium | Chunking, async execution, progress indicators |
+| Output parsing failures | Medium | Robust regex, fallback parsing, error logging |
+
+## Success Metrics
+
+- Scan accuracy: 100% match with raw nmap output
+- Error rate: <1% for valid inputs
+- Performance: Handle 255 host scan in <60 seconds
+- User satisfaction: Clear, actionable output
+- Test coverage: >80% for core modules

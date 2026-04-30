@@ -1,0 +1,115 @@
+# Project Constitution
+
+## Core Principles
+
+### Code Quality
+
+1. **Maintainability First**
+   - Code must be self-documenting with clear naming conventions
+   - Functions should be single-purpose and composable
+   - Maximum function complexity: 10 cyclomatic complexity
+   - Dependencies must be explicitly declared and minimized
+
+2. **Testing Standards**
+   - All business logic must have unit test coverage (minimum 80%)
+   - Critical paths require integration tests
+   - Public APIs must include contract tests
+   - Tests should be deterministic and independent
+
+3. **Code Review Requirements**
+   - All changes require peer review before merge
+   - No direct commits to main/production branches
+   - Reviews must verify functionality, performance, and security
+   - Breaking changes require design review and documentation
+
+4. **Documentation Standards**
+   - Public APIs must include comprehensive documentation
+   - Complex algorithms require inline explanation
+   - README files must be current and complete
+   - Architecture decisions must be recorded (ADRs)
+
+### User Experience Consistency
+
+5. **Interface Coherence**
+   - UI components must follow established design system
+   - Consistent interaction patterns across all features
+   - Error messages must be actionable and user-friendly
+   - Accessibility standards (WCAG 2.1 AA) are mandatory
+
+6. **Response Time Standards**
+   - User interactions must acknowledge within 100ms
+   - Page loads should complete within 2 seconds
+   - Background operations must show progress indicators
+   - Timeouts must be graceful with clear user feedback
+
+7. **Data Integrity**
+   - User data must be validated at all entry points
+   - State changes must be atomic and reversible
+   - Data loss prevention through auto-save and confirmations
+   - Clear version control for user-generated content
+
+8. **Cross-Platform Consistency**
+   - Feature parity across supported platforms
+   - Responsive design for all screen sizes
+   - Consistent behavior across browsers/environments
+   - Platform-specific optimizations where appropriate
+
+### Performance Requirements
+
+9. **Resource Efficiency**
+   - Memory footprint must be bounded and predictable
+   - CPU usage should be proportional to workload
+   - Network requests must be minimized and batched
+   - Lazy loading for non-critical resources
+
+10. **Scalability Standards**
+    - Horizontal scaling must be possible without code changes
+    - Database queries optimized with proper indexing
+    - Caching strategy for frequently accessed data
+    - Rate limiting and throttling for external APIs
+
+11. **Response Time Budgets**
+    - API responses: < 200ms (p95)
+    - Database queries: < 50ms (p95)
+    - UI rendering: 60fps minimum
+    - Search operations: < 500ms (p95)
+
+12. **Optimization Guidelines**
+    - Profile before optimizing (no premature optimization)
+    - Performance regression tests in CI/CD
+    - Bundle sizes monitored and minimized
+    - Images and assets must be optimized
+
+## Quality Gates
+
+### Pre-Commit
+- Linting passes without warnings
+- Local tests pass
+- No debugging code or console logs
+
+### Pre-Merge
+- All CI checks pass
+- Code review approved
+- Documentation updated
+- Performance benchmarks met
+
+### Pre-Release
+- Full test suite passes
+- Security scan completed
+- Performance profiling reviewed
+- User acceptance testing completed
+
+## Non-Negotiables
+
+- **Security**: Never compromise security for convenience or speed
+- **Data Privacy**: User data protection is paramount
+- **Backward Compatibility**: Breaking changes require major version bump
+- **Accessibility**: Features must be accessible to all users
+- **Monitoring**: All production systems must be observable
+
+## Continuous Improvement
+
+- Performance metrics reviewed quarterly
+- User feedback incorporated into roadmap
+- Technical debt addressed regularly (20% sprint capacity)
+- Team learning sessions for new patterns and practices
