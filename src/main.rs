@@ -1,5 +1,5 @@
 use clap::Parser;
-use scanner::{output, parser, scanner::ScanConfig, scanner::scan_network, Result, ScannerError};
+use scanner::{output, parser, scanner::scan_network, scanner::ScanConfig, Result, ScannerError};
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -45,8 +45,12 @@ async fn main() -> Result<()> {
     let targets = parser::parse_cidr(&args.target)?;
     let ports = parser::parse_ports(&args.ports)?;
 
-    println!("Starting scan of {} hosts on {} ports...", targets.len(), ports.len());
-    
+    println!(
+        "Starting scan of {} hosts on {} ports...",
+        targets.len(),
+        ports.len()
+    );
+
     let start = Instant::now();
 
     // Configure and run scan
@@ -56,15 +60,16 @@ async fn main() -> Result<()> {
     };
 
     let results = scan_network(targets, ports.clone(), config).await?;
-    
+
     let duration = start.elapsed().as_secs_f64();
 
     // Format output
     let output_str = match args.format.as_str() {
         "json" => output::format_json(&results, &args.target, duration)
             .map_err(|e| ScannerError::OutputError(e.to_string()))?,
-        "csv" => output::format_csv(&results)
-            .map_err(|e| ScannerError::OutputError(e.to_string()))?,
+        "csv" => {
+            output::format_csv(&results).map_err(|e| ScannerError::OutputError(e.to_string()))?
+        }
         _ => {
             // Table format
             let mut table_output = String::new();
