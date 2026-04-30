@@ -25,7 +25,6 @@ Triggered when a new tag is pushed (e.g., `v0.1.0`).
   - Linux (x86_64, x86_64-musl, aarch64)
   - macOS (x86_64, aarch64/Apple Silicon)
   - Windows (x86_64)
-- **Publish Crate**: Publishes to crates.io (requires `CARGO_TOKEN` secret)
 
 **Creating a Release:**
 ```bash
@@ -69,7 +68,6 @@ docker run --rm ghcr.io/jvzantvoort/scanner:latest --help
 
 Configure these in GitHub repository settings (Settings → Secrets and variables → Actions):
 
-- `CARGO_TOKEN`: Token for publishing to crates.io (optional, only if publishing)
 - `CODECOV_TOKEN`: Token for uploading coverage to Codecov (optional)
 - `GITHUB_TOKEN`: Automatically provided by GitHub Actions
 
