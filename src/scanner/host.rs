@@ -36,7 +36,10 @@ impl HostScanResult {
     }
 
     pub fn open_port_count(&self) -> usize {
-        self.ports.values().filter(|s| **s == PortState::Open).count()
+        self.ports
+            .values()
+            .filter(|s| **s == PortState::Open)
+            .count()
     }
 }
 
