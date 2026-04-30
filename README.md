@@ -22,8 +22,9 @@ A pure Rust network port scanner that detects open ports and displays results in
 
 ## Installation
 
+From crates.io:
 ```bash
-cargo install --path .
+cargo install portscan-rs
 ```
 
 Or build from source:
