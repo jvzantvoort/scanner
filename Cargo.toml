@@ -25,7 +25,7 @@ dns-lookup = "2.0"
 
 # Table & Output
 tabled = "0.15"
-indicatif = "0.17"
+indicatif = "0.18"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
