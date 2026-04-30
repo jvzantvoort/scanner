@@ -21,7 +21,7 @@ console = "0.15"
 # Network
 ipnetwork = "0.20"
 surge-ping = "0.8"
-dns-lookup = "2.0"
+dns-lookup = "3.0"
 
 # Table & Output
 tabled = "0.15"
