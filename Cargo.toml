@@ -1,5 +1,5 @@
 [package]
-name = "scanner"
+name = "portscan-rs"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
@@ -12,20 +12,20 @@ categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
 # Async runtime
-tokio = { version = "1.35", features = ["full"] }
+tokio = { version = "1.47", features = ["full"] }
 
 # CLI
 clap = { version = "4.4", features = ["derive", "cargo"] }
-console = "0.15"
+console = "0.16"
 
 # Network
-ipnetwork = "0.20"
+ipnetwork = "0.21"
 surge-ping = "0.8"
-dns-lookup = "2.0"
+dns-lookup = "3.0"
 
 # Table & Output
-tabled = "0.15"
-indicatif = "0.17"
+tabled = "0.20"
+indicatif = "0.18"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -34,12 +34,16 @@ csv = "1.3"
 
 # Utilities
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = "2.0"
 chrono = "0.4"
-rand = "0.8"
+rand = "0.10"
+
+[[bin]]
+name = "scanner"
+path = "src/main.rs"
 
 [dev-dependencies]
-criterion = "0.5"
+criterion = "0.8"
 
 [[bench]]
 name = "scan_benchmark"
