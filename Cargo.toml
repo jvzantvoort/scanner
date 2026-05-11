@@ -12,7 +12,7 @@ categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
 # Async runtime
-tokio = { version = "1.47", features = ["full"] }
+tokio = { version = "1.52", features = ["full"] }
 
 # CLI
 clap = { version = "4.4", features = ["derive", "cargo"] }
