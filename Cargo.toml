@@ -20,7 +20,7 @@ console = "0.16"
 
 # Network
 ipnetwork = "0.21"
-surge-ping = "0.8"
+surge-ping = "0.9"
 dns-lookup = "3.0"
 
 # Table & Output
