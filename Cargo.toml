@@ -12,7 +12,7 @@ categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
 # Async runtime
-tokio = { version = "1.47", features = ["full"] }
+tokio = { version = "1.52", features = ["full"] }
 
 # CLI
 clap = { version = "4.4", features = ["derive", "cargo"] }
@@ -20,11 +20,11 @@ console = "0.16"
 
 # Network
 ipnetwork = "0.21"
-surge-ping = "0.8"
+surge-ping = "0.9"
 dns-lookup = "3.0"
 
 # Table & Output
-tabled = "0.20"
+tabled = "0.21"
 indicatif = "0.18"
 
 # Serialization
